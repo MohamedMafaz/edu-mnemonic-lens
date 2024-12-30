@@ -9,7 +9,7 @@ export const MnemonicGenerator = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const API_KEY = "AIzaSyB6iP-l6NkyPbD1WtHaqTjDuSa6RMdtkQM";
+  const API_KEY = "AIzaSyD6Eem8LKrihJUrLIJWqIRxojytF-4Ns3g";
 
   const generateMnemonic = async () => {
     if (!sentence.trim()) {
@@ -23,6 +23,9 @@ export const MnemonicGenerator = () => {
 
     setLoading(true);
     try {
+      const words = sentence.split(/[,\s]+/).filter(word => word.length > 0);
+      const firstLetters = words.map(word => word[0].toUpperCase()).join(', ');
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
         {
@@ -35,7 +38,7 @@ export const MnemonicGenerator = () => {
               {
                 parts: [
                   {
-                    text: `Create a memorable mnemonic device for the following sentence. Make it creative and easy to remember: "${sentence}"`,
+                    text: `Create a memorable mnemonic device where each word starts with these letters in order: ${firstLetters}. The words should form a short, memorable phrase or sentence. Make it creative and easy to remember. For example, if given "N, H" for "Neon, Helium", a good mnemonic would be "Naughty Hippos". Original words: ${sentence}`,
                   },
                 ],
               },
@@ -75,14 +78,14 @@ export const MnemonicGenerator = () => {
       <div>
         <h2 className="text-2xl font-semibold mb-4">Mnemonic Generator</h2>
         <p className="text-gray-300 mb-4">
-          Enter a sentence or concept, and we'll create a memorable mnemonic to
-          help you remember it.
+          Enter words separated by spaces or commas, and we'll create a memorable mnemonic
+          where each word starts with the first letter of your input words.
         </p>
       </div>
 
       <div className="space-y-4">
         <Textarea
-          placeholder="Enter your sentence here..."
+          placeholder="Enter your words here (e.g., Neon, Helium)..."
           value={sentence}
           onChange={(e) => setSentence(e.target.value)}
           className="glass-input min-h-[100px]"
