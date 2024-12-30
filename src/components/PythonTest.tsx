@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { pythonQuestions } from "@/data/pythonQuestions";
 import { QuestionCard } from "./QuestionCard";
 import { ResultsView } from "./ResultsView";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const PythonTest = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -21,19 +22,36 @@ export const PythonTest = () => {
     setAnswers(newAnswers);
   };
 
+  const analyzePerformance = (answers: number[]) => {
+    const categories: { [key: string]: { total: number; correct: number } } = {};
+    
+    pythonQuestions.forEach((q, index) => {
+      const category = q.category || "general";
+      if (!categories[category]) {
+        categories[category] = { total: 0, correct: 0 };
+      }
+      categories[category].total++;
+      if (answers[index] === q.correctAnswer) {
+        categories[category].correct++;
+      }
+    });
+
+    return Object.entries(categories).map(([category, stats]) => ({
+      category,
+      percentage: (stats.correct / stats.total) * 100,
+      needsImprovement: (stats.correct / stats.total) < 0.6
+    }));
+  };
+
   const generateCurriculum = async () => {
     setLoading(true);
-    const score = answers.reduce(
-      (acc, answer, index) =>
-        answer === pythonQuestions[index].correctAnswer ? acc + 1 : acc,
-      0
-    );
-
-    // Create a detailed analysis of answers for the AI
-    const answerAnalysis = pythonQuestions.map((q, index) => {
-      const correct = answers[index] === q.correctAnswer;
-      return `Question: ${q.question}\nUser's Answer: ${q.options[answers[index]]}\nCorrect: ${correct}\n`;
-    }).join('\n');
+    const performance = analyzePerformance(answers);
+    const weakAreas = performance
+      .filter(area => area.needsImprovement)
+      .map(area => area.category);
+    const strongAreas = performance
+      .filter(area => !area.needsImprovement)
+      .map(area => area.category);
 
     try {
       const response = await fetch(
@@ -48,7 +66,11 @@ export const PythonTest = () => {
               {
                 parts: [
                   {
-                    text: `Based on this Python test analysis:\n${answerAnalysis}\n\nCreate a detailed 14-day Python learning curriculum for a student who scored ${score} out of ${pythonQuestions.length}. Focus more on topics where they made mistakes. Include specific daily learning objectives, exercises, and resources.`,
+                    text: `Create a personalized 14-day Python learning curriculum. 
+                    Focus heavily on these weak areas: ${weakAreas.join(", ")}. 
+                    Spend less time on these strong areas: ${strongAreas.join(", ")}.
+                    Include specific daily learning objectives, exercises, and resources.
+                    Format the curriculum day by day, with clear headers and bullet points.`,
                   },
                 ],
               },
@@ -74,16 +96,23 @@ export const PythonTest = () => {
     }
   };
 
-  if (showResults) {
-    const score = answers.reduce(
-      (acc, answer, index) =>
-        answer === pythonQuestions[index].correctAnswer ? acc + 1 : acc,
-      0
-    );
+  const handleNext = () => {
+    if (currentQuestion < pythonQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    } else {
+      setShowResults(true);
+      generateCurriculum();
+    }
+  };
 
+  if (showResults) {
     return (
       <ResultsView
-        score={score}
+        score={answers.reduce(
+          (acc, answer, index) =>
+            answer === pythonQuestions[index].correctAnswer ? acc + 1 : acc,
+          0
+        )}
         totalQuestions={pythonQuestions.length}
         curriculum={curriculum}
         loading={loading}
@@ -93,35 +122,49 @@ export const PythonTest = () => {
 
   return (
     <div className="space-y-6">
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
         <h2 className="text-2xl font-semibold mb-4">Python Proficiency Test</h2>
         <p className="text-gray-300 mb-4">
           Complete this test to get a personalized 14-day learning curriculum.
           Progress: {currentQuestion + 1} of {pythonQuestions.length}
         </p>
-      </div>
+        <div className="w-full bg-gray-700 rounded-full h-2 mb-6">
+          <div
+            className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+            style={{
+              width: `${((currentQuestion + 1) / pythonQuestions.length) * 100}%`,
+            }}
+          />
+        </div>
+      </motion.div>
 
-      <QuestionCard
-        question={pythonQuestions[currentQuestion].question}
-        options={pythonQuestions[currentQuestion].options}
-        currentAnswer={answers[currentQuestion]}
-        onAnswer={handleAnswer}
-      />
+      <AnimatePresence mode="wait">
+        <QuestionCard
+          key={currentQuestion}
+          question={pythonQuestions[currentQuestion].question}
+          options={pythonQuestions[currentQuestion].options}
+          currentAnswer={answers[currentQuestion]}
+          onAnswer={handleAnswer}
+        />
+      </AnimatePresence>
 
-      <Button
-        onClick={() => {
-          if (currentQuestion < pythonQuestions.length - 1) {
-            setCurrentQuestion(currentQuestion + 1);
-          } else {
-            setShowResults(true);
-            generateCurriculum();
-          }
-        }}
-        className="w-full btn-primary mt-6"
-        disabled={answers[currentQuestion] === undefined}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
       >
-        {currentQuestion === pythonQuestions.length - 1 ? "Finish" : "Next"}
-      </Button>
+        <Button
+          onClick={handleNext}
+          className="w-full bg-purple-600 hover:bg-purple-700 transition-colors"
+          disabled={answers[currentQuestion] === undefined}
+        >
+          {currentQuestion === pythonQuestions.length - 1 ? "Finish" : "Next"}
+        </Button>
+      </motion.div>
     </div>
   );
 };
