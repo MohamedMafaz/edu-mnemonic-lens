@@ -1,36 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-
-const pythonQuestions = [
-  {
-    question: "What is the output of print(type(5))?",
-    options: ["<class 'int'>", "<class 'str'>", "<class 'float'>", "<class 'bool'>"],
-    correctAnswer: 0,
-  },
-  {
-    question: "Which of these is a valid way to create a list in Python?",
-    options: [
-      "list = [1, 2, 3]",
-      "list = array(1, 2, 3)",
-      "list = {1, 2, 3}",
-      "list = (1, 2, 3)",
-    ],
-    correctAnswer: 0,
-  },
-  {
-    question: "What does the len() function do?",
-    options: [
-      "Returns the length of an object",
-      "Returns the last element",
-      "Returns the first element",
-      "Returns the sum of elements",
-    ],
-    correctAnswer: 0,
-  },
-];
+import { pythonQuestions } from "@/data/pythonQuestions";
+import { QuestionCard } from "./QuestionCard";
+import { ResultsView } from "./ResultsView";
 
 export const PythonTest = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -56,6 +29,12 @@ export const PythonTest = () => {
       0
     );
 
+    // Create a detailed analysis of answers for the AI
+    const answerAnalysis = pythonQuestions.map((q, index) => {
+      const correct = answers[index] === q.correctAnswer;
+      return `Question: ${q.question}\nUser's Answer: ${q.options[answers[index]]}\nCorrect: ${correct}\n`;
+    }).join('\n');
+
     try {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
@@ -69,7 +48,7 @@ export const PythonTest = () => {
               {
                 parts: [
                   {
-                    text: `Create a 14-day Python learning curriculum for a student who scored ${score} out of ${pythonQuestions.length} on a basic Python test. Include specific topics to focus on each day.`,
+                    text: `Based on this Python test analysis:\n${answerAnalysis}\n\nCreate a detailed 14-day Python learning curriculum for a student who scored ${score} out of ${pythonQuestions.length}. Focus more on topics where they made mistakes. Include specific daily learning objectives, exercises, and resources.`,
                   },
                 ],
               },
@@ -95,15 +74,6 @@ export const PythonTest = () => {
     }
   };
 
-  const handleNext = () => {
-    if (currentQuestion < pythonQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      setShowResults(true);
-      generateCurriculum();
-    }
-  };
-
   if (showResults) {
     const score = answers.reduce(
       (acc, answer, index) =>
@@ -112,29 +82,12 @@ export const PythonTest = () => {
     );
 
     return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <h3 className="text-2xl font-semibold mb-4">Test Complete!</h3>
-          <p className="text-xl mb-4">
-            Your Score: {score} out of {pythonQuestions.length}
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="text-center">
-            <p>Generating your personalized curriculum...</p>
-          </div>
-        ) : (
-          curriculum && (
-            <div className="glass p-4">
-              <h3 className="text-xl font-semibold mb-4">
-                Your 14-Day Learning Plan
-              </h3>
-              <div className="whitespace-pre-wrap text-gray-300">{curriculum}</div>
-            </div>
-          )
-        )}
-      </div>
+      <ResultsView
+        score={score}
+        totalQuestions={pythonQuestions.length}
+        curriculum={curriculum}
+        loading={loading}
+      />
     );
   }
 
@@ -144,75 +97,31 @@ export const PythonTest = () => {
         <h2 className="text-2xl font-semibold mb-4">Python Proficiency Test</h2>
         <p className="text-gray-300 mb-4">
           Complete this test to get a personalized 14-day learning curriculum.
+          Progress: {currentQuestion + 1} of {pythonQuestions.length}
         </p>
       </div>
 
-      {!showResults ? (
-        <div className="glass p-4">
-          <p className="text-lg mb-4">
-            Question {currentQuestion + 1} of {pythonQuestions.length}
-          </p>
-          <p className="text-xl mb-6">{pythonQuestions[currentQuestion].question}</p>
+      <QuestionCard
+        question={pythonQuestions[currentQuestion].question}
+        options={pythonQuestions[currentQuestion].options}
+        currentAnswer={answers[currentQuestion]}
+        onAnswer={handleAnswer}
+      />
 
-          <RadioGroup
-            value={answers[currentQuestion]?.toString()}
-            onValueChange={handleAnswer}
-            className="space-y-4"
-          >
-            {pythonQuestions[currentQuestion].options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="text-gray-300">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-
-          <Button
-            onClick={() => {
-              if (currentQuestion < pythonQuestions.length - 1) {
-                setCurrentQuestion(currentQuestion + 1);
-              } else {
-                setShowResults(true);
-                generateCurriculum();
-              }
-            }}
-            className="w-full btn-primary mt-6"
-            disabled={answers[currentQuestion] === undefined}
-          >
-            {currentQuestion === pythonQuestions.length - 1 ? "Finish" : "Next"}
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h3 className="text-2xl font-semibold mb-4">Test Complete!</h3>
-            <p className="text-xl mb-4">
-              Your Score: {answers.reduce(
-                (acc, answer, index) =>
-                  answer === pythonQuestions[index].correctAnswer ? acc + 1 : acc,
-                0
-              )} out of {pythonQuestions.length}
-            </p>
-          </div>
-
-          {loading ? (
-            <div className="text-center">
-              <p>Generating your personalized curriculum...</p>
-            </div>
-          ) : (
-            curriculum && (
-              <div className="glass p-4">
-                <h3 className="text-xl font-semibold mb-4">
-                  Your 14-Day Learning Plan
-                </h3>
-                <div className="whitespace-pre-wrap text-gray-300">{curriculum}</div>
-              </div>
-            )
-          )}
-        </div>
-      )}
+      <Button
+        onClick={() => {
+          if (currentQuestion < pythonQuestions.length - 1) {
+            setCurrentQuestion(currentQuestion + 1);
+          } else {
+            setShowResults(true);
+            generateCurriculum();
+          }
+        }}
+        className="w-full btn-primary mt-6"
+        disabled={answers[currentQuestion] === undefined}
+      >
+        {currentQuestion === pythonQuestions.length - 1 ? "Finish" : "Next"}
+      </Button>
     </div>
   );
 };
