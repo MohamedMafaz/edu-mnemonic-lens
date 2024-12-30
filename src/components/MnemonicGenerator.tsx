@@ -9,6 +9,8 @@ export const MnemonicGenerator = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const API_KEY = "AIzaSyB6iP-l6NkyPbD1WtHaqTjDuSa6RMdtkQM";
+
   const generateMnemonic = async () => {
     if (!sentence.trim()) {
       toast({
@@ -22,12 +24,11 @@ export const MnemonicGenerator = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer AIzaSyB6iP-l6NkyPbD1WtHaqTjDuSa6RMdtkQM`,
           },
           body: JSON.stringify({
             contents: [
@@ -44,6 +45,9 @@ export const MnemonicGenerator = () => {
       );
 
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Failed to generate mnemonic");
+      }
       const generatedMnemonic = data.candidates[0].content.parts[0].text;
       setMnemonic(generatedMnemonic);
     } catch (error) {
@@ -52,6 +56,7 @@ export const MnemonicGenerator = () => {
         description: "Failed to generate mnemonic. Please try again.",
         variant: "destructive",
       });
+      console.error("Mnemonic generation error:", error);
     } finally {
       setLoading(false);
     }
