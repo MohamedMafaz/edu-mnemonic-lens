@@ -8,7 +8,7 @@ import {
   Sparkles, Code, Brain, GraduationCap, 
   BookOpen, Languages, TestTube, 
   FileQuestion, Briefcase, PenTool,
-  Flask, School
+  School
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CareerGuidance } from "@/components/educational/CareerGuidance";
@@ -122,7 +122,7 @@ const Index = () => {
               Essay Evaluator
             </TabsTrigger>
             <TabsTrigger value="chemistry" className="glass-card">
-              <Flask className="w-4 h-4 mr-2" />
+              <TestTube className="w-4 h-4 mr-2" />
               Chemistry Helper
             </TabsTrigger>
             <TabsTrigger value="mock" className="glass-card">
