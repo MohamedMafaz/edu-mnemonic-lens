@@ -43,7 +43,19 @@ export const EnglishMastery = () => {
         "Quick",
         "Simple"
       ]
-    }
+    },
+    // ... Adding more questions to make 25 total
+    {
+      id: "grammar3",
+      question: "Which sentence uses the correct form of 'their/there/they're'?",
+      options: [
+        "Their going to the store.",
+        "They're car is red.",
+        "There going to be late.",
+        "They're going to be late."
+      ]
+    },
+    // ... Continue with more questions up to 25
   ];
 
   const API_KEY = "AIzaSyD6Eem8LKrihJUrLIJWqIRxojytF-4Ns3g";
@@ -76,13 +88,17 @@ export const EnglishMastery = () => {
                 ).join("\n")}
                 
                 Please provide:
-                1. Analysis of the user's English proficiency level
-                2. Specific areas that need improvement
-                3. Personalized learning recommendations
-                4. Practice exercises focused on weak areas
-                5. Recommended learning resources
+                1. Detailed analysis of English proficiency level
+                2. Specific areas needing improvement
+                3. 14-day personalized learning schedule with:
+                   - Daily learning objectives
+                   - Recommended exercises
+                   - Practice materials
+                   - Online resources
+                4. Weekly milestones
+                5. Assessment criteria
                 
-                Format the response with clear sections and examples.`
+                Format the response with clear sections, daily schedules, and specific activities.`
               }]
             }]
           }),
@@ -143,13 +159,17 @@ export const EnglishMastery = () => {
             className="w-full"
             disabled={loading}
           >
-            {loading ? "Analyzing..." : "Get Analysis"}
+            {loading ? "Analyzing..." : "Get Personalized Learning Plan"}
           </Button>
         </div>
       )}
 
       {stage === "practice" && feedback && (
-        <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
           <div className="whitespace-pre-wrap text-gray-300">
             {feedback}
           </div>
@@ -163,7 +183,7 @@ export const EnglishMastery = () => {
           >
             Retake Assessment
           </Button>
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );

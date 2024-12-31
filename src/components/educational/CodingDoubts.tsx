@@ -84,11 +84,18 @@ export const CodingDoubts = () => {
             <SelectValue placeholder="Select programming language" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Python">Python</SelectItem>
+            <SelectItem value="HTML">HTML</SelectItem>
+            <SelectItem value="CSS">CSS</SelectItem>
             <SelectItem value="JavaScript">JavaScript</SelectItem>
+            <SelectItem value="TypeScript">TypeScript</SelectItem>
+            <SelectItem value="React">React</SelectItem>
+            <SelectItem value="Python">Python</SelectItem>
             <SelectItem value="Java">Java</SelectItem>
             <SelectItem value="C++">C++</SelectItem>
             <SelectItem value="SQL">SQL</SelectItem>
+            <SelectItem value="Node.js">Node.js</SelectItem>
+            <SelectItem value="PHP">PHP</SelectItem>
+            <SelectItem value="Ruby">Ruby</SelectItem>
           </SelectContent>
         </Select>
 
@@ -121,12 +128,16 @@ export const CodingDoubts = () => {
         </Button>
 
         {answer && (
-          <div className="mt-6 p-4 rounded-lg bg-black/20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 p-4 rounded-lg bg-black/20"
+          >
             <h3 className="text-xl font-semibold text-white mb-2">Solution</h3>
             <div className="prose prose-invert max-w-none">
               <pre className="whitespace-pre-wrap text-gray-300">{answer}</pre>
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
     </motion.div>
